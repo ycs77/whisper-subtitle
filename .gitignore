@@ -16,5 +16,6 @@ dist
 
 ffmpeg*
 ffprobe*
+*.mp3
 *.mp4
 *.srt

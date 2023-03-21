@@ -13,6 +13,7 @@ const arguPath = process.argv[2]
 async function main() {
   // vars
   const videoPath = path.relative(process.cwd(), arguPath)
+  const audioPath = videoPath.replace(/.(\w+)$/, '.mp3')
   const srtOutputPath = arguPath.replace('.mp4', '.srt')
   const chunkSize = 24 // MB
   let fullSrtContent = ''
@@ -24,18 +25,21 @@ async function main() {
   })
   const openai = new OpenAIApi(openAiConfig)
 
+  await exec(`ffmpeg -i ${videoPath} ${audioPath}`)
+  console.log(c.blue(`  已轉換音檔：${audioPath}`))
+
   // calculate splits size
-  const videoStats = fs.statSync(path.resolve(process.cwd(), videoPath))
-  const videoSize = videoStats.size / (1024 * 1024) // MB
-  const chunkCount = Math.ceil(videoSize / chunkSize)
+  const audioStats = fs.statSync(path.resolve(process.cwd(), audioPath))
+  const audioSize = audioStats.size / (1024 * 1024) // MB
+  const chunkCount = Math.ceil(audioSize / chunkSize)
 
   // calculate chunk video duration
-  const duration = await getDuration(path.resolve(process.cwd(), videoPath))
-  const chunkDuration = duration * (chunkSize / videoSize)
+  const duration = await getDuration(path.resolve(process.cwd(), audioPath))
+  const chunkDuration = duration * (chunkSize / audioSize)
 
   await Promise.all(
     Array.from({ length: chunkCount }).map((_, index) => limiter.schedule(async () => {
-      const chunkFilePath = videoPath.replace(/.(\w+)$/, `_chunk_${index}.$1`)
+      const chunkFilePath = audioPath.replace(/.(\w+)$/, `_chunk_${index}.$1`)
       const chunkSrtFilePath = videoPath.replace(/.(\w+)$/, `_chunk_${index}.srt`)
       const chunkSrtOutputFilePath = videoPath.replace(/.(\w+)$/, `_chunk_${index}_output.srt`)
       const startDuration = chunkDuration * index // 秒
@@ -43,7 +47,7 @@ async function main() {
 
       // split on ffmpeg
       if (!fs.existsSync(path.resolve(process.cwd(), chunkFilePath))) {
-        await exec(`ffmpeg -i ${videoPath} -ss ${startDuration} -t ${chunkDuration} ${chunkFilePath}`)
+        await exec(`ffmpeg -i ${audioPath} -ss ${startDuration} -t ${chunkDuration} ${chunkFilePath}`)
         console.log(c.blue(`  已分割影片：${chunkFilePath}`))
       }
 
@@ -99,6 +103,9 @@ async function main() {
   })
   console.log(c.green(`已生成字幕：${srtOutputPath}`))
 
+  // clear temp files
+  if (fs.existsSync(path.resolve(process.cwd(), audioPath)))
+    fs.rmSync(path.resolve(process.cwd(), audioPath))
 }
 
 main()
