@@ -22,6 +22,10 @@ async function main() {
   const limiter = new Bottleneck({ maxConcurrent: 1 })
   const openAiConfig = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
+    baseOptions: {
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    },
   })
   const openai = new OpenAIApi(openAiConfig)
 
