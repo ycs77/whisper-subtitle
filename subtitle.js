@@ -35,9 +35,9 @@ async function main() {
 
   await Promise.all(
     Array.from({ length: chunkCount }).map((_, index) => limiter.schedule(async () => {
-      const chunkFilePath = videoPath.replace('.mp4', `_chunk_${index}.mp4`)
-      const chunkSrtFilePath = videoPath.replace('.mp4', `_chunk_${index}.srt`)
-      const chunkSrtOutputFilePath = videoPath.replace('.mp4', `_chunk_${index}_output.srt`)
+      const chunkFilePath = videoPath.replace(/.(\w+)$/, `_chunk_${index}.$1`)
+      const chunkSrtFilePath = videoPath.replace(/.(\w+)$/, `_chunk_${index}.srt`)
+      const chunkSrtOutputFilePath = videoPath.replace(/.(\w+)$/, `_chunk_${index}_output.srt`)
       const startDuration = chunkDuration * index // 秒
       const realChunkDuration = Math.min(chunkDuration, duration - startDuration)
 
