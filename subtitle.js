@@ -13,6 +13,7 @@ const arguPath = process.argv[2]
 async function main() {
   // vars
   const videoPath = path.relative(process.cwd(), arguPath)
+  const videoName = path.basename(videoPath)
   const audioPath = videoPath.replace(/.(\w+)$/, '.mp3')
   const srtOutputPath = arguPath.replace('.mp4', '.srt')
   const chunkSize = 24 // MB
@@ -32,7 +33,7 @@ async function main() {
 
   if (!fs.existsSync(path.resolve(process.cwd(), audioPath))) {
     await exec('ffmpeg', ['-i', videoPath, audioPath])
-    console.log(c.blue(`  已轉換音檔：${audioPath}`))
+    console.log(c.blue(`[${videoName}] 轉換音檔 ${audioPath}`))
   }
 
   // calculate splits size
@@ -60,7 +61,7 @@ async function main() {
           `-t`, chunkDuration,
           chunkFilePath,
         ])
-        console.log(c.blue(`  已分割影片：${chunkFilePath}`))
+        console.log(c.blue(`[${videoName}] 分割影片 ${chunkFilePath}`))
       }
 
       // upload to whisper
@@ -69,7 +70,7 @@ async function main() {
       fs.writeFileSync(path.resolve(process.cwd(), chunkSrtFilePath), srt, {
         encoding: 'utf-8',
       })
-      console.log(c.blue(`  已生成字幕：${chunkFilePath}`))
+      console.log(c.blue(`[${videoName}] 生成字幕 ${chunkFilePath}`))
 
       // move srt time
       await new Promise(resolve => {
@@ -105,7 +106,7 @@ async function main() {
       if (fs.existsSync(path.resolve(process.cwd(), chunkSrtOutputFilePath)))
         fs.rmSync(path.resolve(process.cwd(), chunkSrtOutputFilePath))
 
-      console.log(c.blue(`  已處理字幕：${chunkFilePath}`))
+      console.log(c.blue(`[${videoName}] 處理字幕 ${chunkFilePath}`))
     }))
   )
 
@@ -113,7 +114,7 @@ async function main() {
   fs.writeFileSync(path.resolve(process.cwd(), srtOutputPath), fullSrtContent, {
     encoding: 'utf-8',
   })
-  console.log(c.green(`已生成字幕：${srtOutputPath}`))
+  console.log(c.green(`[${videoName}] 生成字幕 ${srtOutputPath}`))
 
   // clear temp files
   if (fs.existsSync(path.resolve(process.cwd(), audioPath)))
