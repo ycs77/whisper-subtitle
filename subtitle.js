@@ -124,7 +124,7 @@ async function main() {
   fs.writeFileSync(path.resolve(process.cwd(), srtOutputPath), fullSrtContent, {
     encoding: 'utf-8',
   })
-  print(`字幕完成 ${srtOutputPath}`)
+  print(`字幕完成 ${srtOutputPath}`, true)
 
   // clear temp files
   if (fs.existsSync(path.resolve(process.cwd(), audioPath)))
