@@ -14,7 +14,7 @@ async function main() {
   // vars
   const videoPath = path.relative(process.cwd(), arguPath)
   const videoName = path.basename(videoPath)
-  const audioPath = videoPath.replace(/.(\w+)$/, '.mp3')
+  const audioPath = videoPath.replace(/.(\w+)$/, '_tmp.mp3')
   const srtOutputPath = arguPath.replace('.mp4', '.srt')
   const chunkSize = 24 // MB
   let fullSrtContent = ''
@@ -47,7 +47,7 @@ async function main() {
 
   await Promise.all(
     Array.from({ length: chunkCount }).map((_, index) => limiter.schedule(async () => {
-      const chunkFilePath = audioPath.replace(/.(\w+)$/, `_chunk_${index}.$1`)
+      const chunkFilePath = audioPath.replace(/_tmp.(\w+)$/, `_chunk_${index}.$1`)
       const chunkSrtFilePath = videoPath.replace(/.(\w+)$/, `_chunk_${index}.srt`)
       const chunkSrtOutputFilePath = videoPath.replace(/.(\w+)$/, `_chunk_${index}_output.srt`)
       const startDuration = chunkDuration * index // 秒
@@ -114,7 +114,7 @@ async function main() {
   fs.writeFileSync(path.resolve(process.cwd(), srtOutputPath), fullSrtContent, {
     encoding: 'utf-8',
   })
-  console.log(c.green(`[${videoName}] 生成字幕 ${srtOutputPath}`))
+  console.log(c.green(`[${videoName}] 字幕完成 ${srtOutputPath}`))
 
   // clear temp files
   if (fs.existsSync(path.resolve(process.cwd(), audioPath)))
