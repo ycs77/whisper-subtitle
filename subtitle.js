@@ -23,6 +23,7 @@ async function main() {
   const openAiConfig = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
     baseOptions: {
+      // Using Infinity is to fix ERR_FR_MAX_BODY_LENGTH_EXCEEDED error
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
     },
