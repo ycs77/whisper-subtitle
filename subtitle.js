@@ -15,7 +15,7 @@ async function main() {
   const videoPath = path.relative(process.cwd(), arguPath)
   const videoName = path.basename(videoPath)
   const audioPath = videoPath.replace(/.(\w+)$/, '_tmp.mp3')
-  const srtOutputPath = arguPath.replace('.mp4', '.srt')
+  const srtOutputPath = videoPath.replace(/.(\w+)$/, '.srt')
   const chunkSize = 24 // MB
   let fullSrtContent = ''
 
