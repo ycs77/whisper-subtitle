@@ -29,8 +29,10 @@ async function main() {
   })
   const openai = new OpenAIApi(openAiConfig)
 
-  await exec(`ffmpeg -i ${videoPath} ${audioPath}`)
-  console.log(c.blue(`  已轉換音檔：${audioPath}`))
+  if (!fs.existsSync(path.resolve(process.cwd(), audioPath))) {
+    await exec('ffmpeg', ['-i', videoPath, audioPath])
+    console.log(c.blue(`  已轉換音檔：${audioPath}`))
+  }
 
   // calculate splits size
   const audioStats = fs.statSync(path.resolve(process.cwd(), audioPath))
@@ -51,7 +53,12 @@ async function main() {
 
       // split on ffmpeg
       if (!fs.existsSync(path.resolve(process.cwd(), chunkFilePath))) {
-        await exec(`ffmpeg -i ${audioPath} -ss ${startDuration} -t ${chunkDuration} ${chunkFilePath}`)
+        await exec('ffmpeg', [
+          `-i`, audioPath,
+          `-ss`, startDuration,
+          `-t`, chunkDuration,
+          chunkFilePath,
+        ])
         console.log(c.blue(`  已分割影片：${chunkFilePath}`))
       }
 
