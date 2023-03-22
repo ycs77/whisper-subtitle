@@ -19,6 +19,16 @@ async function main() {
   const chunkSize = 24 // MB
   let fullSrtContent = ''
 
+  // utils
+  const print = (message, isSuccessfully) => {
+    console.log(
+      c.white(c.bgCyan(` ${videoName} `)) +
+      (isSuccessfully
+        ? c.green(` ${message}`)
+        : ` ${message}`)
+    )
+  }
+
   // instance
   const limiter = new Bottleneck({ maxConcurrent: 1 })
   const openAiConfig = new Configuration({
@@ -33,7 +43,7 @@ async function main() {
 
   if (!fs.existsSync(path.resolve(process.cwd(), audioPath))) {
     await exec('ffmpeg', ['-i', videoPath, audioPath])
-    console.log(c.blue(`[${videoName}] 轉換音檔 ${audioPath}`))
+    print(`轉換音檔 ${audioPath}`)
   }
 
   // calculate splits size
@@ -61,7 +71,7 @@ async function main() {
           `-t`, chunkDuration,
           chunkFilePath,
         ])
-        console.log(c.blue(`[${videoName}] 分割影片 ${chunkFilePath}`))
+        print(`分割影片 ${chunkFilePath}`)
       }
 
       // upload to whisper
@@ -70,7 +80,7 @@ async function main() {
       fs.writeFileSync(path.resolve(process.cwd(), chunkSrtFilePath), srt, {
         encoding: 'utf-8',
       })
-      console.log(c.blue(`[${videoName}] 生成字幕 ${chunkFilePath}`))
+      print(`生成字幕 ${chunkFilePath}`)
 
       // move srt time
       await new Promise(resolve => {
@@ -106,7 +116,7 @@ async function main() {
       if (fs.existsSync(path.resolve(process.cwd(), chunkSrtOutputFilePath)))
         fs.rmSync(path.resolve(process.cwd(), chunkSrtOutputFilePath))
 
-      console.log(c.blue(`[${videoName}] 處理字幕 ${chunkFilePath}`))
+      print(`處理字幕 ${chunkFilePath}`)
     }))
   )
 
@@ -114,7 +124,7 @@ async function main() {
   fs.writeFileSync(path.resolve(process.cwd(), srtOutputPath), fullSrtContent, {
     encoding: 'utf-8',
   })
-  console.log(c.green(`[${videoName}] 字幕完成 ${srtOutputPath}`))
+  print(`字幕完成 ${srtOutputPath}`)
 
   // clear temp files
   if (fs.existsSync(path.resolve(process.cwd(), audioPath)))
