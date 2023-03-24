@@ -86,16 +86,17 @@ async function main() {
       await new Promise(resolve => {
         fs.createReadStream(path.resolve(process.cwd(), chunkSrtFilePath))
           .pipe(parse())
-          // fix last subtitle time
-          .pipe(
-            map((node, index) => {
-              if (node.type === 'cue') {
-                if (node.data.end > (realChunkDuration * 1000)) // 毫秒
-                  node.data.end = realChunkDuration * 1000
-              }
-              return node
-            })
-          )
+          .pipe(map(node => {
+            if (node.type === 'cue') {
+              // fix first subtitle time
+              if (node.data.start < 0)
+                node.data.start = 0
+              // fix last subtitle time
+              if (node.data.end > (realChunkDuration * 1000)) // 毫秒
+                node.data.end = realChunkDuration * 1000
+            }
+            return node
+          }))
           .pipe(resync(startDuration * 1000)) // 毫秒
           .pipe(stringify({ format: 'SRT' }))
           .pipe(fs.createWriteStream(path.resolve(process.cwd(), chunkSrtOutputFilePath)))
