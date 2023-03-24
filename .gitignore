@@ -16,6 +16,7 @@ dist
 
 ffmpeg*
 ffprobe*
+prompt.txt
 *.mp3
 *.mp4
 *.srt
