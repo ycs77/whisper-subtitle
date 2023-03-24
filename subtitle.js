@@ -59,7 +59,6 @@ async function main() {
     Array.from({ length: chunkCount }).map((_, index) => limiter.schedule(async () => {
       const chunkFilePath = audioPath.replace(/_tmp.(\w+)$/, `_chunk_${index}.$1`)
       const chunkSrtFilePath = videoPath.replace(/.(\w+)$/, `_chunk_${index}.srt`)
-      const chunkSrtOutputFilePath = videoPath.replace(/.(\w+)$/, `_chunk_${index}_output.srt`)
       const startDuration = chunkDuration * index // 秒
       const realChunkDuration = Math.min(chunkDuration, duration - startDuration)
 
@@ -83,7 +82,8 @@ async function main() {
       print(`生成字幕 ${chunkFilePath}`)
 
       // move srt time
-      await new Promise(resolve => {
+      const newSrtContent = await new Promise(resolve => {
+        const chunks = []
         fs.createReadStream(path.resolve(process.cwd(), chunkSrtFilePath))
           .pipe(parse())
           .pipe(map(node => {
@@ -99,29 +99,36 @@ async function main() {
           }))
           .pipe(resync(startDuration * 1000)) // 毫秒
           .pipe(stringify({ format: 'SRT' }))
-          .pipe(fs.createWriteStream(path.resolve(process.cwd(), chunkSrtOutputFilePath)))
-          .on('finish', resolve)
+          .on('data', chunk => chunks.push(Buffer.from(chunk)))
+          .on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')))
       })
 
       // concat full srt file
       if (fullSrtContent) fullSrtContent += "\n"
-      fullSrtContent += fs.readFileSync(path.resolve(process.cwd(), chunkSrtOutputFilePath), {
-        encoding: 'utf-8',
-      })
+      fullSrtContent += newSrtContent
 
       // clear temp files
       if (fs.existsSync(path.resolve(process.cwd(), chunkFilePath)))
         fs.rmSync(path.resolve(process.cwd(), chunkFilePath))
       if (fs.existsSync(path.resolve(process.cwd(), chunkSrtFilePath)))
         fs.rmSync(path.resolve(process.cwd(), chunkSrtFilePath))
-      if (fs.existsSync(path.resolve(process.cwd(), chunkSrtOutputFilePath)))
-        fs.rmSync(path.resolve(process.cwd(), chunkSrtOutputFilePath))
 
       print(`處理字幕 ${chunkFilePath}`)
     }))
   )
 
   // save full srt
+  fs.writeFileSync(path.resolve(process.cwd(), srtOutputPath), fullSrtContent, {
+    encoding: 'utf-8',
+  })
+  fullSrtContent = await new Promise(resolve => {
+    const chunks = []
+    fs.createReadStream(path.resolve(process.cwd(), srtOutputPath))
+      .pipe(parse())
+      .pipe(stringify({ format: 'SRT' }))
+      .on('data', chunk => chunks.push(Buffer.from(chunk)))
+      .on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')))
+  })
   fs.writeFileSync(path.resolve(process.cwd(), srtOutputPath), fullSrtContent, {
     encoding: 'utf-8',
   })
