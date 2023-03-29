@@ -83,7 +83,7 @@ async function main() {
       print(`生成字幕 ${chunkFilePath}`)
 
       // move srt time
-      const newSrtContent = await new Promise(resolve => {
+      const srtContent = await new Promise(resolve => {
         const chunks = []
         fs.createReadStream(path.resolve(process.cwd(), chunkSrtFilePath))
           .pipe(parse())
@@ -106,7 +106,7 @@ async function main() {
 
       // concat full srt file
       if (fullSrtContent) fullSrtContent += "\n"
-      fullSrtContent += newSrtContent
+      fullSrtContent += srtContent
 
       // clear temp files
       if (fs.existsSync(path.resolve(process.cwd(), chunkFilePath)))
