@@ -75,7 +75,9 @@ async function main() {
 
       // upload to whisper
       const stream = fs.createReadStream(path.resolve(process.cwd(), chunkFilePath))
-      const prompt = fs.readFileSync(path.resolve(__dirname, 'prompt.txt'), { encoding: 'utf-8' })
+      let prompt
+      if (fs.existsSync(path.resolve(__dirname, 'prompt.txt')))
+        prompt = fs.readFileSync(path.resolve(__dirname, 'prompt.txt'), { encoding: 'utf-8' })
       const { data: srt } = await openai.createTranscription(stream, 'whisper-1', prompt || undefined, 'srt')
       fs.writeFileSync(path.resolve(process.cwd(), chunkSrtFilePath), srt, {
         encoding: 'utf-8',
