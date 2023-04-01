@@ -1,5 +1,8 @@
+const path = require('path')
+const fs = require('fs')
 const child_process = require('child_process')
 const spawn = require('cross-spawn')
+const { map, parse, stringify } = require('subtitle')
 
 module.exports.getDuration = function (path) {
   return new Promise((resolve, reject) => {
@@ -27,5 +30,23 @@ module.exports.exec = function (command, args) {
         resolve()
       })
     }, 100)
+  })
+}
+
+module.exports.srtToTxt = function (srtFile) {
+  return new Promise(resolve => {
+    const lines = []
+    fs.createReadStream(path.resolve(process.cwd(), srtFile))
+      .pipe(parse())
+      .pipe(map(node => {
+        if (node.type === 'cue') {
+          lines.push(node.data.text)
+        }
+        return node
+      }))
+      .on('data', () => {})
+      .on('end', () => {
+        resolve(lines.join('\n'))
+      })
   })
 }

@@ -23,3 +23,11 @@ node subtitle.js video.mp4
 ```
 
 如果要增加 prompt 的話，可以建立一個 `prompt.txt` 檔案，將內容輸入裡面，就會自動將提示文字發送給 Whisper 了。
+
+## 輸出格式
+
+輸出格式可以選擇 `srt` 和 `txt`：
+
+```
+node subtitle.js video.mp4 --format srt,txt
+```

@@ -1,2 +1,3 @@
-"node.exe" "subtitle.js" %*
-exit
+@echo off
+
+node subtitle.js %*
