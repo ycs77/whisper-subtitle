@@ -79,58 +79,58 @@ async function main() {
   await Promise.all(
     Array.from({ length: chunkCount }).map((_, index) => limiter.schedule(async () => {
       const limiter = new Bottleneck({ maxConcurrent: 1 })
-      const chunkFilePath = audioPath.replace(/_tmp.(\w+)$/, `_chunk_${index}.$1`)
-      const chunkOutputFilePaths = formats.map(format => videoPath.replace(/.(\w+)$/, `_chunk_${index}.${format}`))
-      const chunkSrtFilePath = videoPath.replace(/.(\w+)$/, `_chunk_${index}.srt`)
+      const chunkPath = audioPath.replace(/_tmp.(\w+)$/, `_chunk_${index}.$1`)
+      const chunkOutputPaths = formats.map(format => videoPath.replace(/.(\w+)$/, `_chunk_${index}.${format}`))
+      const chunkSrtPath = videoPath.replace(/.(\w+)$/, `_chunk_${index}.srt`)
       const startDuration = chunkDuration * index // 秒
       const realChunkDuration = Math.min(chunkDuration, duration - startDuration)
 
       // split on ffmpeg
-      if (!fs.existsSync(path.resolve(process.cwd(), chunkFilePath))) {
+      if (!fs.existsSync(path.resolve(process.cwd(), chunkPath))) {
         await exec('ffmpeg', [
           `-i`, audioPath,
           `-ss`, startDuration,
           `-t`, chunkDuration,
-          chunkFilePath,
+          chunkPath,
         ])
-        print(`分割影片 ${chunkFilePath}`)
+        print(`分割影片 ${chunkPath}`)
       }
 
       // upload to whisper
-      const stream = fs.createReadStream(path.resolve(process.cwd(), chunkFilePath))
+      const stream = fs.createReadStream(path.resolve(process.cwd(), chunkPath))
       let prompt
       if (fs.existsSync(path.resolve(__dirname, 'prompt.txt')))
         prompt = fs.readFileSync(path.resolve(__dirname, 'prompt.txt'), { encoding: 'utf-8' })
       const { data: srt } = await openai.createTranscription(stream, 'whisper-1', prompt || undefined, 'srt')
-      fs.writeFileSync(path.resolve(process.cwd(), chunkSrtFilePath), srt, {
+      fs.writeFileSync(path.resolve(process.cwd(), chunkSrtPath), srt, {
         encoding: 'utf-8',
       })
       await Promise.all(
-        chunkOutputFilePaths.map(chunkOutputFilePath => limiter.schedule(async () => {
-          const format = resolveFormatFromPath(chunkOutputFilePath)
+        chunkOutputPaths.map(chunkOutputPath => limiter.schedule(async () => {
+          const format = resolveFormatFromPath(chunkOutputPath)
 
           // transform srt to txt
           if (format === 'txt') {
-            const content = await srtToTxt(chunkSrtFilePath)
-            fs.writeFileSync(path.resolve(process.cwd(), chunkOutputFilePath), content, {
+            const content = await srtToTxt(chunkSrtPath)
+            fs.writeFileSync(path.resolve(process.cwd(), chunkOutputPath), content, {
               encoding: 'utf-8',
             })
           }
         }))
       )
-      print(`生成字幕 ${chunkFilePath}`)
+      print(`生成字幕 ${chunkPath}`)
 
       // handle fubtitle files
       await Promise.all(
-        chunkOutputFilePaths.map(chunkOutputFilePath => limiter.schedule(async () => {
-          const format = resolveFormatFromPath(chunkOutputFilePath)
+        chunkOutputPaths.map(chunkOutputPath => limiter.schedule(async () => {
+          const format = resolveFormatFromPath(chunkOutputPath)
           let chunkContent = ''
 
           if (format === 'srt') {
             // move srt time
             chunkContent = await new Promise(resolve => {
               const chunks = []
-              fs.createReadStream(path.resolve(process.cwd(), chunkOutputFilePath))
+              fs.createReadStream(path.resolve(process.cwd(), chunkOutputPath))
                 .pipe(parse())
                 .pipe(map(node => {
                   if (node.type === 'cue') {
@@ -149,7 +149,7 @@ async function main() {
                 .on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')))
             })
           } else if (format === 'txt') {
-            chunkContent = fs.readFileSync(path.resolve(process.cwd(), chunkOutputFilePath), { encoding: 'utf-8' })
+            chunkContent = fs.readFileSync(path.resolve(process.cwd(), chunkOutputPath), { encoding: 'utf-8' })
           }
 
           // concat full srt file
@@ -159,43 +159,43 @@ async function main() {
       )
 
       // clear temp files
-      if (fs.existsSync(path.resolve(process.cwd(), chunkFilePath)))
-        fs.rmSync(path.resolve(process.cwd(), chunkFilePath))
-      if (fs.existsSync(path.resolve(process.cwd(), chunkSrtFilePath)))
-        fs.rmSync(path.resolve(process.cwd(), chunkSrtFilePath))
-      for (const chunkOutputFilePath of chunkOutputFilePaths) {
-        if (fs.existsSync(path.resolve(process.cwd(), chunkOutputFilePath)))
-          fs.rmSync(path.resolve(process.cwd(), chunkOutputFilePath))
+      if (fs.existsSync(path.resolve(process.cwd(), chunkPath)))
+        fs.rmSync(path.resolve(process.cwd(), chunkPath))
+      if (fs.existsSync(path.resolve(process.cwd(), chunkSrtPath)))
+        fs.rmSync(path.resolve(process.cwd(), chunkSrtPath))
+      for (const chunkOutputPath of chunkOutputPaths) {
+        if (fs.existsSync(path.resolve(process.cwd(), chunkOutputPath)))
+          fs.rmSync(path.resolve(process.cwd(), chunkOutputPath))
       }
 
-      print(`處理字幕 ${chunkFilePath}`)
+      print(`處理字幕 ${chunkPath}`)
     }))
   )
 
   // save full srt
   await Promise.all(
-    outputPaths.map(outputFilePath => limiter.schedule(async () => {
-      const format = resolveFormatFromPath(outputFilePath)
+    outputPaths.map(outputPath => limiter.schedule(async () => {
+      const format = resolveFormatFromPath(outputPath)
 
-      fs.writeFileSync(path.resolve(process.cwd(), outputFilePath), fullOutputContents[format], {
+      fs.writeFileSync(path.resolve(process.cwd(), outputPath), fullOutputContents[format], {
         encoding: 'utf-8',
       })
 
       if (format === 'srt') {
         fullOutputContents[format] = await new Promise(resolve => {
           const chunks = []
-          fs.createReadStream(path.resolve(process.cwd(), outputFilePath))
+          fs.createReadStream(path.resolve(process.cwd(), outputPath))
             .pipe(parse())
             .pipe(stringify({ format: 'SRT' }))
             .on('data', chunk => chunks.push(Buffer.from(chunk)))
             .on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')))
         })
-        fs.writeFileSync(path.resolve(process.cwd(), outputFilePath), fullOutputContents[format], {
+        fs.writeFileSync(path.resolve(process.cwd(), outputPath), fullOutputContents[format], {
           encoding: 'utf-8',
         })
       }
 
-      print(`字幕完成 ${outputFilePath}`, true)
+      print(`字幕完成 ${outputPath}`, true)
     }))
   )
 
