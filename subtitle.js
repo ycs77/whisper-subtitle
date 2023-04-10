@@ -6,7 +6,7 @@ const { Configuration, OpenAIApi } = require('openai')
 const Bottleneck = require('bottleneck')
 const { map, resync, parse, stringify } = require('subtitle')
 const c = require('picocolors')
-const { exec, getDuration, srtToTxt } = require('./utils')
+const { exec, getDuration, srtToTxt, errorLog } = require('./utils')
 
 const { argPath, formats } = resolveArgs(process.argv)
 
@@ -63,7 +63,11 @@ async function main() {
   const openai = new OpenAIApi(openAiConfig)
 
   if (!fs.existsSync(path.resolve(process.cwd(), audioPath))) {
-    await exec('ffmpeg', ['-i', videoPath, audioPath])
+    try {
+      await exec('ffmpeg', ['-i', videoPath, audioPath])
+    } catch (error) {
+      errorLog(error)
+    }
     print(`轉換音檔 ${audioPath}`)
   }
 
@@ -73,7 +77,12 @@ async function main() {
   const chunkCount = Math.ceil(audioSize / chunkSize)
 
   // calculate chunk video duration
-  const duration = await getDuration(path.resolve(process.cwd(), audioPath))
+  let duration = 0
+  try {
+    duration = await getDuration(path.resolve(process.cwd(), audioPath))
+  } catch (error) {
+    errorLog(error)
+  }
   const chunkDuration = duration * (chunkSize / audioSize)
 
   await Promise.all(
@@ -87,12 +96,16 @@ async function main() {
 
       // split on ffmpeg
       if (!fs.existsSync(path.resolve(process.cwd(), chunkPath))) {
-        await exec('ffmpeg', [
-          `-i`, audioPath,
-          `-ss`, startDuration,
-          `-t`, chunkDuration,
-          chunkPath,
-        ])
+        try {
+          await exec('ffmpeg', [
+            `-i`, audioPath,
+            `-ss`, startDuration,
+            `-t`, chunkDuration,
+            chunkPath,
+          ])
+        } catch (error) {
+          errorLog(error)
+        }
         print(`分割影片 ${chunkPath}`)
       }
 
@@ -101,7 +114,13 @@ async function main() {
       let prompt
       if (fs.existsSync(path.resolve(__dirname, 'prompt.txt')))
         prompt = fs.readFileSync(path.resolve(__dirname, 'prompt.txt'), { encoding: 'utf-8' })
-      const { data: srt } = await openai.createTranscription(stream, 'whisper-1', prompt || undefined, 'srt')
+      let srt = ''
+      try {
+        const { data } = await openai.createTranscription(stream, 'whisper-1', prompt || undefined, 'srt')
+        srt = data
+      } catch (error) {
+        errorLog(error)
+      }
       fs.writeFileSync(path.resolve(process.cwd(), chunkSrtPath), srt, {
         encoding: 'utf-8',
       })
