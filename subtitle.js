@@ -139,7 +139,7 @@ async function main() {
       )
       print(`生成字幕 ${chunkPath}`)
 
-      // handle fubtitle files
+      // handle subtitle files
       await Promise.all(
         chunkOutputPaths.map(chunkOutputPath => limiter.schedule(async () => {
           const format = resolveFormatFromPath(chunkOutputPath)
