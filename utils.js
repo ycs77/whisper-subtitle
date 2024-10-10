@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import child_process from 'node:child_process'
 import spawn from 'cross-spawn'
 import { map, parse } from 'subtitle'
+import c from 'picocolors'
 
 export function getDuration(path) {
   return new Promise((resolve, reject) => {
@@ -56,6 +57,34 @@ export function srtToTxt(srtFile) {
         resolve(lines.join('\n'))
       })
   })
+}
+
+export function generatePrintLog(item) {
+  return function printLog(message, type) {
+    console.log(
+      c.white(c.bgCyan(` ${item} `)) +
+      (
+        type === 'success'
+          ? c.green(` ${message}`)
+          : type === 'warning'
+            ? c.yellow(` ${message}`)
+            : ` ${message}`
+      )
+    )
+  }
+}
+
+export function printLog(message, type) {
+  console.log(
+    c.white(c.bgCyan(` ${videoName} `)) +
+    (
+      type === 'success'
+        ? c.green(` ${message}`)
+        : type === 'warning'
+          ? c.yellow(` ${message}`)
+          : ` ${message}`
+    )
+  )
 }
 
 export function errorLog(error) {

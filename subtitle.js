@@ -6,7 +6,7 @@ import OpenAI from 'openai'
 import Bottleneck from 'bottleneck'
 import { map, resync, parse, stringify } from 'subtitle'
 import c from 'picocolors'
-import { exec, getDuration, srtToTxt, errorLog } from './utils.js'
+import { exec, getDuration, srtToTxt, generatePrintLog, errorLog } from './utils.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -45,14 +45,7 @@ async function main() {
   }, {})
 
   // utils
-  const print = (message, isSuccessfully) => {
-    console.log(
-      c.white(c.bgCyan(` ${videoName} `)) +
-      (isSuccessfully
-        ? c.green(` ${message}`)
-        : ` ${message}`)
-    )
-  }
+  const printLog = generatePrintLog(videoName)
 
   // instance
   const limiter = new Bottleneck({ maxConcurrent: 1 })
@@ -60,13 +53,28 @@ async function main() {
     apiKey: process.env.OPENAI_API_KEY,
   })
 
-  if (!fs.existsSync(path.resolve(process.cwd(), audioPath))) {
+  // print info
+  console.log()
+  console.log(`  ${c.cyan('Formats:')}   ${c.yellow(formats.join(', '))}`)
+  console.log(`  ${c.cyan('Language:')}  ${language ? c.yellow(language) : c.dim('未設定')}`)
+  console.log(`  ${c.cyan('Prompt:')}    ${
+    fs.existsSync(path.resolve(__dirname, 'prompt.txt'))
+      ? c.green('已設定')
+      : c.dim('未設定')
+  }`)
+  console.log()
+
+  // transform video to audio
+  if (fs.existsSync(path.resolve(process.cwd(), audioPath))) {
+    printLog(`音檔已存在 ${audioPath}`, 'warning')
+  } else {
+    printLog(`轉換音檔開始 ${audioPath}`)
     try {
       await exec('ffmpeg', ['-i', videoPath, audioPath])
     } catch (error) {
       errorLog(error)
     }
-    print(`轉換音檔 ${audioPath}`)
+    printLog(`轉換音檔完成 ${audioPath}`, 'success')
   }
 
   // calculate splits size
@@ -93,7 +101,10 @@ async function main() {
       const realChunkDuration = Math.min(chunkDuration, duration - startDuration)
 
       // split on ffmpeg
-      if (!fs.existsSync(path.resolve(process.cwd(), chunkPath))) {
+      if (fs.existsSync(path.resolve(process.cwd(), chunkPath))) {
+        printLog(`影片片段已存在 ${chunkPath}`, 'warning')
+      } else {
+        printLog(`分割影片開始 ${chunkPath}`)
         try {
           await exec('ffmpeg', [
             `-i`, audioPath,
@@ -104,10 +115,11 @@ async function main() {
         } catch (error) {
           errorLog(error)
         }
-        print(`分割影片 ${chunkPath}`)
+        printLog(`分割影片完成 ${chunkPath}`, 'success')
       }
 
       // upload to whisper
+      printLog(`生成片段字幕開始 ${chunkPath}`)
       let prompt
       if (fs.existsSync(path.resolve(__dirname, 'prompt.txt'))) {
         prompt = fs.readFileSync(path.resolve(__dirname, 'prompt.txt'), { encoding: 'utf-8' })
@@ -140,9 +152,10 @@ async function main() {
           }
         }))
       )
-      print(`生成字幕 ${chunkPath}`)
+      printLog(`生成片段字幕完成 ${chunkPath}`, 'success')
 
       // handle subtitle files
+      printLog(`處理片段字幕開始 ${chunkPath}`)
       await Promise.all(
         chunkOutputPaths.map(chunkOutputPath => limiter.schedule(async () => {
           const format = resolveFormatFromPath(chunkOutputPath)
@@ -190,7 +203,7 @@ async function main() {
           fs.rmSync(path.resolve(process.cwd(), chunkOutputPath))
       }
 
-      print(`處理字幕 ${chunkPath}`)
+      printLog(`處理片段字幕完成 ${chunkPath}`, 'success')
     }))
   )
 
@@ -217,7 +230,7 @@ async function main() {
         })
       }
 
-      print(`字幕完成 ${outputPath}`, true)
+      printLog(`字幕完成 ${outputPath}`, 'success')
     }))
   )
 
