@@ -1,16 +1,15 @@
 {
+  "type": "module",
   "private": true,
   "dependencies": {
-    "axios": "^0.27.0",
     "bottleneck": "^2.19.5",
-    "chalk": "^4.1.2",
     "cross-spawn": "^7.0.3",
-    "dotenv": "^16.0.3",
-    "openai": "^3.2.0",
-    "picocolors": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "openai": "^4.67.3",
+    "picocolors": "^1.1.0",
     "subtitle": "^4.2.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20"
+    "nodemon": "^3.1.7"
   }
 }

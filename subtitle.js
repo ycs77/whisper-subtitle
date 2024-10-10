@@ -1,14 +1,17 @@
-require('dotenv').config()
+import 'dotenv/config'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+import fs from 'node:fs'
+import OpenAI from 'openai'
+import Bottleneck from 'bottleneck'
+import { map, resync, parse, stringify } from 'subtitle'
+import c from 'picocolors'
+import { exec, getDuration, srtToTxt, errorLog } from './utils.js'
 
-const path = require('path')
-const fs = require('fs')
-const { Configuration, OpenAIApi } = require('openai')
-const Bottleneck = require('bottleneck')
-const { map, resync, parse, stringify } = require('subtitle')
-const c = require('picocolors')
-const { exec, getDuration, srtToTxt, errorLog } = require('./utils')
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
-const { argPath, formats } = resolveArgs(process.argv)
+const { argPath, formats, language } = resolveArgs(process.argv)
 
 function resolveArgs(args) {
   const argPath = args[2]
@@ -20,12 +23,13 @@ function resolveArgs(args) {
     : process.env.SUBTITLE_FORMAT
       ? process.env.SUBTITLE_FORMAT.split(',')
       : ['srt']
+  const language = process.env.SUBTITLE_LANGUAGE
 
   if (!Array.isArray(formats) || !formats.every(v => supprtsFormats.includes(v))) {
     throw new Error(`Argument --format ${formats} is invalid, supported formats: ${supprtsFormats}`)
   }
 
-  return { argPath, formats }
+  return { argPath, formats, language }
 }
 
 async function main() {
@@ -52,15 +56,9 @@ async function main() {
 
   // instance
   const limiter = new Bottleneck({ maxConcurrent: 1 })
-  const openAiConfig = new Configuration({
+  const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
-    baseOptions: {
-      // Using Infinity is to fix ERR_FR_MAX_BODY_LENGTH_EXCEEDED error
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
-    },
   })
-  const openai = new OpenAIApi(openAiConfig)
 
   if (!fs.existsSync(path.resolve(process.cwd(), audioPath))) {
     try {
@@ -110,14 +108,19 @@ async function main() {
       }
 
       // upload to whisper
-      const stream = fs.createReadStream(path.resolve(process.cwd(), chunkPath))
       let prompt
-      if (fs.existsSync(path.resolve(__dirname, 'prompt.txt')))
+      if (fs.existsSync(path.resolve(__dirname, 'prompt.txt'))) {
         prompt = fs.readFileSync(path.resolve(__dirname, 'prompt.txt'), { encoding: 'utf-8' })
+      }
       let srt = ''
       try {
-        const { data } = await openai.createTranscription(stream, 'whisper-1', prompt || undefined, 'srt')
-        srt = data
+        srt = await openai.audio.transcriptions.create({
+          model: 'whisper-1',
+          file: fs.createReadStream(path.resolve(process.cwd(), chunkPath)),
+          language: language,
+          prompt,
+          response_format: 'srt',
+        })
       } catch (error) {
         errorLog(error)
       }

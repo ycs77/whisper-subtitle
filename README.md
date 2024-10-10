@@ -8,8 +8,8 @@
 
 需要安裝 Node.js、ffmpeg (包含 ffprobe 執行檔)，然後安裝依賴：
 
-```
-npm i
+```bash
+npm install
 ```
 
 ## 使用
@@ -18,7 +18,7 @@ npm i
 
 或使用命令行模式：
 
-```
+```bash
 node subtitle.js video.mp4
 ```
 
@@ -28,7 +28,9 @@ node subtitle.js video.mp4
 
 輸出格式可以選擇 `srt` 和 `txt`：
 
-```
+```bash
+node subtitle.js video.mp4 --format srt
+node subtitle.js video.mp4 --format txt
 node subtitle.js video.mp4 --format srt,txt
 ```
 

@@ -1,10 +1,10 @@
-const path = require('path')
-const fs = require('fs')
-const child_process = require('child_process')
-const spawn = require('cross-spawn')
-const { map, parse } = require('subtitle')
+import path from 'node:path'
+import fs from 'node:fs'
+import child_process from 'node:child_process'
+import spawn from 'cross-spawn'
+import { map, parse } from 'subtitle'
 
-module.exports.getDuration = function (path) {
+export function getDuration(path) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       child_process.exec(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${path}"`, (error, stdout, stderr) => {
@@ -18,7 +18,7 @@ module.exports.getDuration = function (path) {
   })
 }
 
-module.exports.exec = function (command, args) {
+export function exec(command, args) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       const parts = Array.isArray(args) ? [command, ...args] : command.split(' ')
@@ -37,7 +37,7 @@ module.exports.exec = function (command, args) {
   })
 }
 
-module.exports.srtToTxt = function (srtFile) {
+export function srtToTxt(srtFile) {
   return new Promise((resolve, reject) => {
     const lines = []
     fs.createReadStream(path.resolve(process.cwd(), srtFile))
@@ -58,7 +58,9 @@ module.exports.srtToTxt = function (srtFile) {
   })
 }
 
-module.exports.errorLog = function (error) {
+export function errorLog(error) {
+  console.error(error)
+
   const logFile = 'whisper-subtitle-error.log'
   const content = `Date: ${new Date().toLocaleString()}:\n\nError:\n${error.stack ?? error.message}\n`
 

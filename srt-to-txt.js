@@ -1,9 +1,8 @@
-require('dotenv').config()
-
-const path = require('path')
-const fs = require('fs')
-const c = require('picocolors')
-const { srtToTxt } = require('./utils')
+import 'dotenv/config'
+import path from 'node:path'
+import fs from 'node:fs'
+import c from 'picocolors'
+import { srtToTxt } from './utils.js'
 
 const argPath = process.argv[2]
 
