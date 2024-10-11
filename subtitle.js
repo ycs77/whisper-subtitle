@@ -23,6 +23,7 @@ function resolveArgs(args) {
     : process.env.SUBTITLE_FORMAT
       ? process.env.SUBTITLE_FORMAT.split(',')
       : ['srt']
+
   const language = process.env.SUBTITLE_LANGUAGE
 
   if (!Array.isArray(formats) || !formats.every(v => supprtsFormats.includes(v))) {

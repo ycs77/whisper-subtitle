@@ -37,3 +37,12 @@ node subtitle.js video.mp4 --format srt,txt
 ### srt 轉 txt
 
 先在任意地方建立 `srt-to-txt.cmd` 的捷徑，命名為「srt 轉 txt」，然後將 `.srt` 字幕檔拖曳上去就好了。
+
+### 翻譯 srt 字幕
+
+先在任意地方建立 `translate-srt.cmd` 的捷徑，命名為「翻譯 srt 字幕」，然後將 `.srt` 字幕檔拖曳上去就好了。
+
+```bash
+node translate-srt.js video.mp4 --from "English" --to "Traditional Chinese"
+node translate-srt.js video.mp4 --from "English" --to "Japanese"
+```

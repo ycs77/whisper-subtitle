@@ -1,6 +1,8 @@
 import path from 'node:path'
 import fs from 'node:fs'
 import child_process from 'node:child_process'
+import { Transform } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import spawn from 'cross-spawn'
 import { map, parse } from 'subtitle'
 import c from 'picocolors'
@@ -38,29 +40,41 @@ export function exec(command, args) {
   })
 }
 
-export function srtToTxt(srtFile) {
-  return new Promise((resolve, reject) => {
-    const lines = []
-    fs.createReadStream(path.resolve(process.cwd(), srtFile))
-      .pipe(parse())
-      .pipe(map(node => {
-        if (node.type === 'cue') {
-          lines.push(node.data.text)
-        }
-        return node
-      }))
-      .on('data', () => {})
-      .on('error', error => {
-        reject(error)
-      })
-      .on('end', () => {
-        resolve(lines.join('\n'))
-      })
+/**
+ * @param {(node: import('subtitle').Node, index: number) => Promise<any>} mapper
+ * @returns {Transform}
+ */
+export function asyncMap(mapper) {
+  let index = 0
+
+  return new Transform({
+    objectMode: true,
+    autoDestroy: false,
+    async transform(chunk, _encoding, callback) {
+      callback(null, await mapper(chunk, index++))
+    },
   })
 }
 
+export async function srtToTxt(srtFile) {
+  const lines = []
+
+  await pipeline(
+    fs.createReadStream(path.resolve(process.cwd(), srtFile)),
+    parse(),
+    map(node => {
+      if (node.type === 'cue') {
+        lines.push(node.data.text)
+      }
+      return node
+    }),
+  )
+
+  return lines.join('\n')
+}
+
 export function generatePrintLog(item) {
-  return function printLog(message, type) {
+  return function printLog(message = '', type = null) {
     console.log(
       c.white(c.bgCyan(` ${item} `)) +
       (
