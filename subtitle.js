@@ -37,6 +37,12 @@ function resolveArgs(args) {
 async function main() {
   // vars
   const videoPath = path.relative(process.cwd(), argPath)
+  if (!videoPath) {
+    errorLog('請輸入影片/音檔檔案路徑')
+  }
+  if (!['.mp4', '.avi', '.mov', '.mp3', '.wav', '.flac'].includes(path.extname(videoPath))) {
+    errorLog('請輸入影片/音檔檔案')
+  }
   const videoName = path.basename(videoPath)
   const audioPath = videoPath.replace(/.(\w+)$/, '_tmp.mp3')
   const outputPaths = formats.map(format => videoPath.replace(/.(\w+)$/, `.${format}`))

@@ -5,7 +5,7 @@ import { pipeline } from 'node:stream/promises'
 import OpenAI from 'openai'
 import { parse, stringify, formatTimestamp } from 'subtitle'
 import c from 'picocolors'
-import { asyncMap, generatePrintLog } from './utils.js'
+import { asyncMap, generatePrintLog, errorLog } from './utils.js'
 
 const { argPath, languageFrom, languageTo } = resolveArgs(process.argv)
 
@@ -28,6 +28,12 @@ function resolveArgs(args) {
 async function main() {
   // vars
   const srtPath = argPath
+  if (!srtPath) {
+    errorLog('請輸入 srt 檔案路徑')
+  }
+  if (path.extname(srtPath) !== '.srt') {
+    errorLog('請輸入 srt 檔案')
+  }
   const srtName = path.basename(srtPath)
   const outputPath = srtPath.replace(/.(\w+)$/, `-${languageTo.toLowerCase().replaceAll(' ', '-')}.$1`)
   const formatOptions = { format: 'SRT' }

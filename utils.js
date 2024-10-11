@@ -100,23 +100,26 @@ export function generatePrintLog(item) {
 }
 
 export function printLog(message, type) {
-  console.log(
-    c.white(c.bgCyan(` ${videoName} `)) +
-    (
-      type === 'success'
-        ? c.green(` ${message}`)
-        : type === 'warning'
-          ? c.yellow(` ${message}`)
-          : ` ${message}`
-    )
-  )
+  let content = c.white(c.bgCyan(` ${videoName} `)) + ' '
+
+  if (type === 'success') content += c.green(message)
+  else if (type === 'warning') content += c.yellow(message)
+  else content += message
+
+  console.log(content)
 }
 
 export function errorLog(error) {
-  console.error(error)
-
   const logFile = 'whisper-subtitle-error.log'
-  const content = `Date: ${new Date().toLocaleString()}:\n\nError:\n${error.stack ?? error.message}\n`
+  let content = `Date: ${new Date().toLocaleString()}:\n\nError:\n`
+
+  if (typeof error === 'string') {
+    console.error(`${c.white(c.bgRedBright(' ERROR '))} ${error}`)
+    content += `${error}\n`
+  } else {
+    console.error(error)
+    content += `${error.stack ?? error.message}\n`
+  }
 
   fs.writeFileSync(path.resolve(process.cwd(), logFile), content, {
     encoding: 'utf-8',
