@@ -83,6 +83,7 @@ Target Language: ${languageTo}`,
         printLog(`翻譯成 "${node.data.text}"`)
         printLog()
       }
+
       return node
     }),
     stringify(formatOptions),

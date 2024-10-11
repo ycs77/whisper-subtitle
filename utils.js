@@ -1,10 +1,10 @@
 import path from 'node:path'
 import fs from 'node:fs'
 import child_process from 'node:child_process'
-import { Transform } from 'node:stream'
+import { Transform, Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import spawn from 'cross-spawn'
-import { map, parse } from 'subtitle'
+import { filter, map, parse } from 'subtitle'
 import c from 'picocolors'
 
 export function getDuration(path) {
@@ -56,21 +56,32 @@ export function asyncMap(mapper) {
   })
 }
 
+/**
+ * @param {(chunk: any) => void} callback
+ * @returns {Writable}
+ */
+export function receive(callback) {
+  return new Writable({
+    objectMode: true,
+    write(chunk, _encoding, done) {
+      callback(chunk)
+      done()
+    },
+  })
+}
+
 export async function srtToTxt(srtFile) {
-  const lines = []
+  let chunks = ''
 
   await pipeline(
     fs.createReadStream(path.resolve(process.cwd(), srtFile)),
     parse(),
-    map(node => {
-      if (node.type === 'cue') {
-        lines.push(node.data.text)
-      }
-      return node
-    }),
+    filter(node => node.type === 'cue'),
+    map(node => node.data.text),
+    receive(chunk => chunks += `${chunk}\n`),
   )
 
-  return lines.join('\n')
+  return chunks
 }
 
 export function generatePrintLog(item) {

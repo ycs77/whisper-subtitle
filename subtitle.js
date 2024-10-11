@@ -2,11 +2,12 @@ import 'dotenv/config'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
+import { pipeline } from 'node:stream/promises'
 import OpenAI from 'openai'
 import Bottleneck from 'bottleneck'
 import { map, resync, parse, stringify } from 'subtitle'
 import c from 'picocolors'
-import { exec, getDuration, srtToTxt, generatePrintLog, errorLog } from './utils.js'
+import { exec, getDuration, receive, srtToTxt, generatePrintLog, errorLog } from './utils.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -165,10 +166,11 @@ async function main() {
           if (format === 'srt') {
             // move srt time
             chunkContent = await new Promise(resolve => {
-              const chunks = []
-              fs.createReadStream(path.resolve(process.cwd(), chunkOutputPath))
-                .pipe(parse())
-                .pipe(map(node => {
+              let chunks = ''
+              pipeline(
+                fs.createReadStream(path.resolve(process.cwd(), chunkOutputPath)),
+                parse(),
+                map(node => {
                   if (node.type === 'cue') {
                     // fix first subtitle time
                     if (node.data.start < 0)
@@ -178,11 +180,11 @@ async function main() {
                       node.data.end = realChunkDuration * 1000
                   }
                   return node
-                }))
-                .pipe(resync(startDuration * 1000)) // 毫秒
-                .pipe(stringify({ format: 'SRT' }))
-                .on('data', chunk => chunks.push(Buffer.from(chunk)))
-                .on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')))
+                }),
+                resync(startDuration * 1000), // 毫秒
+                stringify({ format: 'SRT' }),
+                receive(chunk => chunks += chunk),
+              ).then(() => resolve(chunks))
             })
           } else if (format === 'txt') {
             chunkContent = fs.readFileSync(path.resolve(process.cwd(), chunkOutputPath), { encoding: 'utf-8' })
@@ -219,12 +221,14 @@ async function main() {
 
       if (format === 'srt') {
         fullOutputContents[format] = await new Promise(resolve => {
-          const chunks = []
-          fs.createReadStream(path.resolve(process.cwd(), outputPath))
-            .pipe(parse())
-            .pipe(stringify({ format: 'SRT' }))
-            .on('data', chunk => chunks.push(Buffer.from(chunk)))
-            .on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')))
+          let chunks = ''
+          // rebuild srt index
+          pipeline(
+            fs.createReadStream(path.resolve(process.cwd(), outputPath)),
+            parse(),
+            stringify({ format: 'SRT' }),
+            receive(chunk => chunks += chunk),
+          ).then(() => resolve(chunks))
         })
         fs.writeFileSync(path.resolve(process.cwd(), outputPath), fullOutputContents[format], {
           encoding: 'utf-8',
