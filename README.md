@@ -19,7 +19,7 @@ npm install
 或使用命令行模式：
 
 ```bash
-node subtitle.js video.mp4
+node subtitle.js /path/to/video.mp4
 ```
 
 如果要增加 prompt 的話，可以建立一個 `prompt.txt` 檔案，將內容輸入裡面，就會自動將提示文字發送給 Whisper 了。
@@ -29,9 +29,9 @@ node subtitle.js video.mp4
 輸出格式可以選擇 `srt` 和 `txt`：
 
 ```bash
-node subtitle.js video.mp4 --format srt
-node subtitle.js video.mp4 --format txt
-node subtitle.js video.mp4 --format srt,txt
+node subtitle.js /path/to/video.mp4 --format srt
+node subtitle.js /path/to/video.mp4 --format txt
+node subtitle.js /path/to/video.mp4 --format srt,txt
 ```
 
 ## srt 轉 txt
@@ -43,6 +43,6 @@ node subtitle.js video.mp4 --format srt,txt
 先在任意地方建立 `translate-srt.cmd` 的捷徑，命名為「翻譯 srt 字幕」，然後將 `.srt` 字幕檔拖曳上去就好了。
 
 ```bash
-node translate-srt.js video.mp4 --from "English" --to "Traditional Chinese"
-node translate-srt.js video.mp4 --from "English" --to "Japanese"
+node translate-srt.js /path/to/video.mp4 --from "English" --to "Traditional Chinese"
+node translate-srt.js /path/to/video.mp4 --from "English" --to "Japanese"
 ```
