@@ -170,7 +170,8 @@ async function main() {
           let chunkContent = ''
 
           if (format === 'srt') {
-            // move srt time
+            // 1. move srt time
+            // 2. remove end period
             chunkContent = await new Promise(resolve => {
               let chunks = ''
               pipeline(
@@ -181,9 +182,14 @@ async function main() {
                     // fix first subtitle time
                     if (node.data.start < 0)
                       node.data.start = 0
+
                     // fix last subtitle time
                     if (node.data.end > (realChunkDuration * 1000)) // 毫秒
                       node.data.end = realChunkDuration * 1000
+
+                    // remove end period
+                    if (/\.|。$/.test(node.data.text))
+                      node.data.text = node.data.text.replace(/\.|。$/, '')
                   }
                   return node
                 }),

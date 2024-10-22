@@ -84,7 +84,12 @@ Target Language: ${languageTo}`,
           ],
         })
 
-        node.data.text = choices[0].message.content || node.data.text
+        if (choices[0].message.content)
+          node.data.text = choices[0].message.content
+
+        // remove end period
+        if (/\.|。$/.test(node.data.text))
+          node.data.text = node.data.text.replace(/\.|。$/, '')
 
         printLog(`翻譯成 "${node.data.text}"`)
         printLog()
