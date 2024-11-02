@@ -7,6 +7,10 @@ import spawn from 'cross-spawn'
 import { filter, map, parse } from 'subtitle'
 import c from 'picocolors'
 
+/**
+ * @param {string} path
+ * @returns {Promise<number>}
+ */
 export function getDuration(path) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -21,6 +25,11 @@ export function getDuration(path) {
   })
 }
 
+/**
+ * @param {string} command
+ * @param {string[] | string} args
+ * @returns {Promise<void>}
+ */
 export function exec(command, args) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -70,6 +79,10 @@ export function receive(callback) {
   })
 }
 
+/**
+ * @param {string} srtFile
+ * @returns {Promise<string>}
+ */
 export async function srtToTxt(srtFile) {
   let chunks = ''
 
