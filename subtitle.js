@@ -137,7 +137,7 @@ async function main() {
         srt = await openai.audio.transcriptions.create({
           model: 'whisper-1',
           file: fs.createReadStream(path.resolve(process.cwd(), chunkPath)),
-          language: language,
+          language,
           prompt,
           response_format: 'srt',
         })
