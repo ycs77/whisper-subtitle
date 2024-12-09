@@ -15,12 +15,12 @@ function resolveArgs(args) {
   const languageFromIndex = args.findIndex(v => v === '--from')
   const languageFrom = languageFromIndex !== -1
     ? args[languageFromIndex + 1]
-    : process.env.SUBTITLE_TRANSLATE_LANGUAGE_FROM
+    : process.env.SUBTITLE_LANGUAGE_TRANSLATE_FROM
 
   const languageToIndex = args.findIndex(v => v === '--to')
   const languageTo = languageToIndex !== -1
     ? args[languageToIndex + 1]
-    : process.env.SUBTITLE_TRANSLATE_LANGUAGE_TO
+    : process.env.SUBTITLE_LANGUAGE_TRANSLATE_TO
 
   return { argPath, languageFrom, languageTo }
 }
