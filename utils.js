@@ -97,29 +97,17 @@ export async function srtToTxt(srtFile) {
   return chunks
 }
 
-export function generatePrintLog(item) {
-  return function printLog(message = '', type = null) {
-    console.log(
-      c.white(c.bgCyan(` ${item} `)) +
-      (
-        type === 'success'
-          ? c.green(` ${message}`)
-          : type === 'warning'
-            ? c.yellow(` ${message}`)
-            : ` ${message}`
-      )
-    )
+export function printLog(message = '', type = 'info') {
+  const variants = ['info', 'warning']
+  let isLabel = !variants.includes(type)
+
+  if (isLabel) {
+    console.log(`${c.bgCyan(c.black(` ${type} `))} ${message}`)
+  } else if (type === 'info') {
+    console.log(`${c.blue(' INFO ')} ${message}`)
+  } else if (type === 'warning') {
+    console.log(`${c.yellow(' WARN ')} ${message}`)
   }
-}
-
-export function printLog(message, type) {
-  let content = c.white(c.bgCyan(` ${videoName} `)) + ' '
-
-  if (type === 'success') content += c.green(message)
-  else if (type === 'warning') content += c.yellow(message)
-  else content += message
-
-  console.log(content)
 }
 
 export function errorLog(error) {
@@ -127,7 +115,7 @@ export function errorLog(error) {
   let content = `Date: ${new Date().toLocaleString()}:\n\nError:\n`
 
   if (typeof error === 'string') {
-    console.error(`${c.white(c.bgRedBright(' ERROR '))} ${error}`)
+    console.error(`${c.bgRedBright(c.white(' ERROR '))} ${error}`)
     content += `${error}\n`
   } else {
     console.error(error)

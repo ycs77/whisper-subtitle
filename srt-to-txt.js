@@ -25,7 +25,7 @@ async function main() {
     encoding: 'utf-8',
   })
 
-  printLog(`轉成文字檔 ${outputPath}`, 'success')
+  printLog(`轉成文字檔 ${outputPath}`)
 }
 
 main()

@@ -5,7 +5,7 @@ import { pipeline } from 'node:stream/promises'
 import OpenAI from 'openai'
 import { parse, stringify, formatTimestamp } from 'subtitle'
 import c from 'picocolors'
-import { asyncMap, generatePrintLog, errorLog, assertOpenaiApiKey } from './utils.js'
+import { asyncMap, printLog, errorLog, assertOpenaiApiKey } from './utils.js'
 
 assertOpenaiApiKey()
 
@@ -40,21 +40,16 @@ async function main() {
   const outputPath = srtPath.replace(/.(\w+)$/, `-${languageTo.toLowerCase().replaceAll(' ', '-')}.$1`)
   const formatOptions = { format: 'SRT' }
 
-  // utils
-  const printLog = generatePrintLog(srtName)
-
   // instance
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   })
 
-  console.log()
-  console.log(`  ${c.cyan('Language From:')}  ${c.yellow(languageFrom)}`)
-  console.log(`  ${c.cyan('Language To:')}    ${c.yellow(languageTo)}`)
-  console.log()
-
-  printLog(`翻譯字幕開始 ${srtPath}`)
-  printLog()
+  // print info
+  printLog(srtPath, '字幕')
+  printLog(`Language From: ${c.yellow(languageFrom)}`)
+  printLog(`Language To: ${c.yellow(languageTo)}`)
+  printLog('開始翻譯字幕...', '翻譯')
 
   await pipeline(
     fs.createReadStream(path.resolve(process.cwd(), srtPath)),
@@ -67,7 +62,7 @@ async function main() {
         } --> ${
           formatTimestamp(node.data.end, formatOptions)
         }`)
-        printLog(`翻譯前 "${node.data.text}"`)
+        printLog(`原文 "${node.data.text}"`)
 
         const { choices } = await openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
@@ -93,7 +88,7 @@ Target Language: ${languageTo}`,
         if (/\.|。$/.test(node.data.text))
           node.data.text = node.data.text.replace(/\.|。$/, '')
 
-        printLog(`翻譯成 "${node.data.text}"`)
+        printLog(`翻譯 "${node.data.text}"`)
         printLog()
       }
 
@@ -103,7 +98,8 @@ Target Language: ${languageTo}`,
     fs.createWriteStream(path.resolve(process.cwd(), outputPath)),
   )
 
-  printLog(`翻譯字幕完成 ${srtPath}`, 'success')
+  printLog('字幕翻譯完成！')
+  printLog(`  ${srtPath}`)
 }
 
 main()
