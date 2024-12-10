@@ -5,7 +5,9 @@ import { pipeline } from 'node:stream/promises'
 import OpenAI from 'openai'
 import { parse, stringify, formatTimestamp } from 'subtitle'
 import c from 'picocolors'
-import { asyncMap, generatePrintLog, errorLog } from './utils.js'
+import { asyncMap, generatePrintLog, errorLog, assertOpenaiApiKey } from './utils.js'
+
+assertOpenaiApiKey()
 
 const { argPath, languageFrom, languageTo } = resolveArgs(process.argv)
 

@@ -7,7 +7,9 @@ import OpenAI from 'openai'
 import Bottleneck from 'bottleneck'
 import { map, resync, parse, stringify } from 'subtitle'
 import c from 'picocolors'
-import { exec, getDuration, receive, srtToTxt, generatePrintLog, errorLog } from './utils.js'
+import { exec, getDuration, receive, srtToTxt, generatePrintLog, errorLog, assertOpenaiApiKey } from './utils.js'
+
+assertOpenaiApiKey()
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

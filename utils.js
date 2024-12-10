@@ -140,3 +140,10 @@ export function errorLog(error) {
 
   process.exit(1)
 }
+
+export function assertOpenaiApiKey() {
+  if (!process.env.OPENAI_API_KEY) {
+    console.error(c.red('Error: OPENAI_API_KEY environment variable is not set. Please set it with your OpenAI API key.'))
+    process.exit(1)
+  }
+}
