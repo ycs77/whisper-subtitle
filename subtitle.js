@@ -5,7 +5,7 @@ import fs from 'node:fs'
 import { pipeline } from 'node:stream/promises'
 import OpenAI from 'openai'
 import Bottleneck from 'bottleneck'
-import { map, resync, parse, stringify } from 'subtitle'
+import { map, parse, stringify } from 'subtitle'
 import c from 'picocolors'
 import { exec, getDuration, receive, srtToTxt, printLog, errorLog, assertOpenaiApiKey } from './utils.js'
 
@@ -197,7 +197,6 @@ async function main() {
                   }
                   return node
                 }),
-                resync(startDuration * 1000), // 毫秒
                 stringify({ format: 'SRT' }),
                 receive(chunk => chunks += chunk),
               ).then(() => resolve(chunks))
