@@ -166,7 +166,7 @@ async function main() {
       printLog('字幕生成完成！')
 
       // handle subtitle files
-      printLog('開始處理片段字幕..., ', '字幕')
+      printLog('開始處理片段字幕...', '字幕')
       printLog(`  ${chunkPath}`)
       await Promise.all(
         chunkOutputPaths.map(chunkOutputPath => limiter.schedule(async () => {
