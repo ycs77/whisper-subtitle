@@ -1,5 +1,4 @@
 import 'dotenv/config'
-import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
 import { pipeline } from 'node:stream/promises'
@@ -10,9 +9,6 @@ import c from 'picocolors'
 import { exec, getDuration, receive, srtToTxt, printLog, errorLog, assertOpenaiApiKey } from './utils.js'
 
 assertOpenaiApiKey()
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 const { argPath, formats, language } = resolveArgs(process.argv)
 
@@ -65,7 +61,7 @@ async function main() {
   printLog(`Formats: ${c.yellow(formats.join(', '))}`)
   printLog(`Language: ${language ? c.yellow(language) : c.dim('未設定')}`)
   printLog(`Custom Prompt: ${
-    fs.existsSync(path.resolve(__dirname, 'prompt.txt'))
+    fs.existsSync(path.resolve(import.meta.dirname, 'prompt.txt'))
       ? c.green('已設定')
       : c.dim('未設定')
   }`)
@@ -132,8 +128,8 @@ async function main() {
       printLog('開始生成片段字幕...', '字幕')
       printLog(`  ${chunkPath}`)
       let prompt
-      if (fs.existsSync(path.resolve(__dirname, 'prompt.txt'))) {
-        prompt = fs.readFileSync(path.resolve(__dirname, 'prompt.txt'), { encoding: 'utf-8' })
+      if (fs.existsSync(path.resolve(import.meta.dirname, 'prompt.txt'))) {
+        prompt = fs.readFileSync(path.resolve(import.meta.dirname, 'prompt.txt'), { encoding: 'utf-8' })
       }
       let srt = ''
       try {
