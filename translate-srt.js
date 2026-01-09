@@ -70,7 +70,7 @@ async function main() {
         spinner.start()
 
         const response = await openai.responses.create({
-          model: 'gpt-5.1',
+          model: 'gpt-4o',
           instructions: `Act as a highly proficient translation assistant. Your task is to accurately translate the provided text from ${languageFrom} to ${languageTo}, maintaining the original meaning, tone, and style. Pay special attention to cultural nuances and idiomatic expressions to ensure the translation is contextually appropriate. Additionally, ensure the translation is concise and suitable for subtitle formatting. Add a half-width space between full-width and half-width characters to improve readability.
 
 Source Language: ${languageFrom}
