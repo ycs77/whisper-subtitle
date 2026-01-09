@@ -64,7 +64,7 @@ async function main() {
   printLog(videoName, '媒體')
   printLog(`Formats: ${c.yellow(formats.join(', '))}`)
   printLog(`Language: ${language ? c.yellow(language) : c.dim('未設定')}`)
-  printLog(`Prompt: ${
+  printLog(`Custom Prompt: ${
     fs.existsSync(path.resolve(__dirname, 'prompt.txt'))
       ? c.green('已設定')
       : c.dim('未設定')
