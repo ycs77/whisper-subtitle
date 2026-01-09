@@ -5,6 +5,7 @@ import { pipeline } from 'node:stream/promises'
 import OpenAI from 'openai'
 import { parse, stringify, formatTimestamp } from 'subtitle'
 import c from 'picocolors'
+import { Spinner } from 'picospinner'
 import { asyncMap, printLog, errorLog, assertOpenaiApiKey } from './utils.js'
 
 assertOpenaiApiKey()
@@ -43,6 +44,9 @@ async function main() {
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   })
+  const spinner = new Spinner({
+    symbolFormatter: _ => '',
+  })
 
   // print info
   printLog(srtPath, '字幕')
@@ -62,6 +66,8 @@ async function main() {
           formatTimestamp(node.data.end, formatOptions)
         }`)
         printLog(`原文 "${node.data.text}"`)
+        printLog('翻譯中...', 'info', spinner.setText.bind(spinner))
+        spinner.start()
 
         const response = await openai.responses.create({
           model: 'gpt-5.1',
@@ -78,6 +84,7 @@ Target Language: ${languageTo}`,
         if (/\.|。$/.test(node.data.text))
           node.data.text = node.data.text.replace(/\.|。$/, '')
 
+        spinner.stop()
         printLog(`翻譯 "${node.data.text}"`)
         printLog()
       }

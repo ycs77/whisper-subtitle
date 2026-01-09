@@ -10,6 +10,7 @@
     "dotenv": "^17.2.3",
     "openai": "^6.15.0",
     "picocolors": "^1.1.1",
+    "picospinner": "^3.0.0",
     "subtitle": "^4.2.2"
   }
 }

@@ -97,16 +97,16 @@ export async function srtToTxt(srtFile) {
   return chunks
 }
 
-export function printLog(message = '', type = 'info') {
+export function printLog(message = '', type = 'info', printer = console.log) {
   const variants = ['info', 'warning']
   let isLabel = !variants.includes(type)
 
   if (isLabel) {
-    console.log(`${c.bgCyan(c.black(` ${type} `))} ${message}`)
+    printer(`${c.bgCyan(c.black(` ${type} `))} ${message}`)
   } else if (type === 'info') {
-    console.log(`${c.blue(' INFO ')} ${message}`)
+    printer(`${c.blue(' INFO ')} ${message}`)
   } else if (type === 'warning') {
-    console.log(`${c.yellow(' WARN ')} ${message}`)
+    printer(`${c.yellow(' WARN ')} ${message}`)
   }
 }
 
