@@ -36,7 +36,6 @@ async function main() {
   if (path.extname(srtPath) !== '.srt') {
     errorLog('請輸入 srt 檔案')
   }
-  const srtName = path.basename(srtPath)
   const outputPath = srtPath.replace(/.(\w+)$/, `-${languageTo.toLowerCase().replaceAll(' ', '-')}.$1`)
   const formatOptions = { format: 'SRT' }
 
