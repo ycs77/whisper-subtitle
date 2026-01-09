@@ -63,25 +63,16 @@ async function main() {
         }`)
         printLog(`原文 "${node.data.text}"`)
 
-        const { choices } = await openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: `Act as a highly proficient translation assistant. Your task is to accurately translate the provided text from ${languageFrom} to ${languageTo}, maintaining the original meaning, tone, and style. Pay special attention to cultural nuances and idiomatic expressions to ensure the translation is contextually appropriate. Additionally, ensure the translation is concise and suitable for subtitle formatting. Add a half-width space between full-width and half-width characters to improve readability.
+        const response = await openai.responses.create({
+          model: 'gpt-5.1',
+          instructions: `Act as a highly proficient translation assistant. Your task is to accurately translate the provided text from ${languageFrom} to ${languageTo}, maintaining the original meaning, tone, and style. Pay special attention to cultural nuances and idiomatic expressions to ensure the translation is contextually appropriate. Additionally, ensure the translation is concise and suitable for subtitle formatting. Add a half-width space between full-width and half-width characters to improve readability.
 
 Source Language: ${languageFrom}
 Target Language: ${languageTo}`,
-            },
-            {
-              role: 'user',
-              content: node.data.text,
-            },
-          ],
+          input: node.data.text,
         })
 
-        if (choices[0].message.content)
-          node.data.text = choices[0].message.content
+        node.data.text = response.output_text
 
         // remove end period
         if (/\.|。$/.test(node.data.text))
